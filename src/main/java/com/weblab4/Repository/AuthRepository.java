@@ -8,5 +8,4 @@ import java.util.List;
 
 public interface AuthRepository extends JpaRepository<AuthEntry,String> {
     AuthEntry findByLogin(String login);
-
 }

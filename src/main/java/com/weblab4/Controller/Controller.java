@@ -25,7 +25,7 @@ public class Controller {
     @Autowired
     AuthRepository authRepository;
 
-    @GetMapping("/hits/{login}")
+    @GetMapping("/hits/{login}" )
     public ResponseEntity<List<HitEntry>> getAllHitEntriesByLogin(@PathVariable("login") String login){
         try {
 
@@ -35,7 +35,7 @@ public class Controller {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
 
-            System.out.println(entries.size());
+            System.out.println("Amount of hits:" + entries.size());
 
             return new ResponseEntity<>(entries, HttpStatus.OK);
         } catch (Exception e) {
@@ -45,17 +45,18 @@ public class Controller {
 
     @PostMapping("/authentication")
     public ResponseEntity<AuthEntry> authUser(@RequestBody AuthEntry entry){
-        System.out.println("log " + entry.getLogin() + "pass " + entry.getPassword());
+        System.out.println("log " + entry.getLogin() + " pass " + entry.getPassword());
         AuthEntry dbEntry = authRepository.findByLogin(entry.getLogin());
-        if(dbEntry !=null && dbEntry.getPassword().equals(Encryptor.getSHA512Encode(entry.getPassword()))){
+        if((dbEntry !=null && dbEntry.getPassword().equals(Encryptor.getSHA512Encode(entry.getPassword())) && !dbEntry.isActive())){
             System.out.println("User founded!");
+            dbEntry.setActive(true);
+            authRepository.save(dbEntry);
 //            entry.setPassword("testPassed");
             return new ResponseEntity<>(entry,HttpStatus.OK);
         }else{
-            System.out.println("User not found");
+            System.out.println("User not found or already active");
             return new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
         }
-
     }
 
     @PostMapping("/registration")
@@ -64,7 +65,7 @@ public class Controller {
         entry.setPassword(Encryptor.getSHA512Encode(pass));
 
         if(authRepository.findByLogin(entry.getLogin()) == null) {
-
+            entry.setActive(true);
             authRepository.save(entry);
             entry.setPassword(pass);
             return new ResponseEntity<>(entry, HttpStatus.OK);
@@ -74,6 +75,13 @@ public class Controller {
         }
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<AuthEntry> logout(@RequestBody AuthEntry entry){
+        System.out.println("User logged out");
+        entry.setActive(false);
+        authRepository.save(entry);
+        return new ResponseEntity<>(null, HttpStatus.OK);
+    }
     @PostMapping("/hits/add")
     public ResponseEntity<HitEntry> addEmployee(@RequestBody HitEntry hit) {
         hit.checkHit();
@@ -81,10 +89,10 @@ public class Controller {
         return new ResponseEntity<>(null, HttpStatus.OK);
     }
 
-    @DeleteMapping("/delete/{login}")
-    public ResponseEntity<?> deleteEmployee(@PathVariable("login") String login) {
-        hitRepository.deleteHitEntriesByLogin(login);
-        return new ResponseEntity<>(HttpStatus.OK);
+    @PostMapping("/hits/clear")
+    public ResponseEntity<?> deleteEmployee(@RequestBody AuthEntry entry) {
+        hitRepository.deleteHitEntriesByLogin(entry.getLogin());
+        return new ResponseEntity<>(null,HttpStatus.OK);
     }
 
 //    @GetMapping("/allHits/{login}")

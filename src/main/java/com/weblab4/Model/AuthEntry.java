@@ -16,6 +16,9 @@ public class AuthEntry implements Serializable {
     private String login;
     @Column
     private String password;
+
+    @Column
+    private boolean isActive;
 //    private boolean isValid;
 //
 //    public boolean isValid() {
@@ -25,6 +28,15 @@ public class AuthEntry implements Serializable {
 //    public void setValid(boolean valid) {
 //        isValid = valid;
 //    }
+
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
 
     public String getLogin() {
         return login;
